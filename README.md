@@ -1,2 +1,4 @@
 # REU18-MIRO
-REU 2018
+# Notes
+# Installation
+# Demo
