@@ -17,10 +17,8 @@ miro delpolicy d AS 2
 p SELECT * FROM miro_policy;
 
 #sample echo "CASE WHERE MULTIPLE CHOICES IN ABGP"
-#miro addpolicy d AS 1
-#p SELECT * FROM miro_policy;
+#p INSERT INTO abgp VALUES('d', 'B', 'AS 1')
 #miro route
 #p SELECT * FROM bgproute;
-#miro delpolicy d AS 1
 
 miro help
