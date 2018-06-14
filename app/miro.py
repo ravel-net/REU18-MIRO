@@ -50,9 +50,19 @@ class MiroConsole(AppConsole):
             print "Failure: TODO ERROR 3", e
             return
 
-        print("DEBUG min: %d" % min_c)
-        print("DEBUG re: %s" % re)
-        print("route(D, Rn, P) = (%s, %s, %s)" % (d, rn, p))
+        # All in one go
+        try:
+           self.db.cursor.execute("""SELECT d, rn, p FROM 
+                (SELECT d, igp.re, p, rn, c 
+                FROM abgp INNER JOIN igp
+                ON abgp.re = igp.re)
+                AS alt
+                WHERE alt.c = (SELECT MIN(C) FROM igp);""");
+           bgp_cursor = self.db.cursor.fetchall()
+           print(bgp_cursor)
+        except Exception, e:
+            print "Failure: TODO ERROR 4", e
+            return
 
 
 shortcut = "miro"
