@@ -11,29 +11,27 @@ class MiroConsole(AppConsole):
         # ORDER BY c ASC;
         policy = ""
         try:
-            self.db.cursor.execute("""SELECT d, rn, p FROM 
+            self.db.cursor.execute("""CREATE VIEW bgproute AS
+                SELECT d, rn, p FROM 
                 (SELECT d, igp.re, p, rn, c 
                 FROM abgp INNER JOIN igp
                 ON abgp.re = igp.re)
                 AS alt {0}
                 ORDER BY c ASC
                 LIMIT 1;""".format(policy))
-            bgp_cursor = self.db.cursor.fetchall()
-            print(bgp_cursor)
+            print("Success: Route in view 'bgproute'")
         except Exception, e:
-            print "Failure: TODO ERROR 4", e
+            print "Failure: Unable to retrieve route", e
             return
 
+    # MIRO(D,P) :- route(D,Rn,P)
     def do_downstream(self, line):
         try:
-            self.db.cursor.execute("""SELECT d, p FROM
-                     (SELECT d, igp.re, p, rn, c
-                     FROM abgp INNER JOIN igp ON abgp.re=igp.re) AS alt
-                     GROUP BY d, p;""")
-            downstream_cursor = self.db.cursor.fetchall()
-            print(downstream_cursor)
+            self.db.cursor.execute("""CREATE VIEW downstream AS
+                     SELECT d, p FROM abgp GROUP BY d, p;""")
+            print("Success: Downstream ASes in view 'downstream'")
         except Exception, e:
-            print "Failure: Downstream MIRO-capable AS", e
+            print "Failure: Unable to retrieve downstream ASes", e
             return
 
 
