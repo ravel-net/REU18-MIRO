@@ -9,7 +9,7 @@ class MiroConsole(AppConsole):
         rn = None
         p = None
 
-
+        """
         # hotpotato(min<C>) :- IGP(Rn, Re, C)
         try:
            self.db.cursor.execute("SELECT MIN(C) FROM igp;")
@@ -49,15 +49,20 @@ class MiroConsole(AppConsole):
         except Exception, e:
             print "Failure: TODO ERROR 3", e
             return
+        """
 
         # All in one go
+        # all(prefix, egress, ASPath, ingress, cost):
+        # SELECT * FROM (SELECT d, igp.re, p, rn, c FROM abgp INNER JOIN igp ON abgp.re = igp.re) AS alt ORDER BY c ASC;
+        policy = ""
         try:
            self.db.cursor.execute("""SELECT d, rn, p FROM 
                 (SELECT d, igp.re, p, rn, c 
                 FROM abgp INNER JOIN igp
                 ON abgp.re = igp.re)
-                AS alt
-                WHERE alt.c = (SELECT MIN(C) FROM igp);""");
+                AS alt {0}
+                ORDER BY c ASC
+                LIMIT 1;""".format(policy))
            bgp_cursor = self.db.cursor.fetchall()
            print(bgp_cursor)
         except Exception, e:
