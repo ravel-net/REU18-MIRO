@@ -8,40 +8,35 @@ class MiroConsole(AppConsole):
         Usage: route
         """
 
-        # all(prefix, egress, ASPath, ingress, cost) ->
-        # SELECT * FROM
-        #   (SELECT d, igp.re, p, rn, c
-        #   FROM abgp INNER JOIN igp ON abgp.re = igp.re) AS alt
-        # ORDER BY c ASC;
         policy = self.get_policy_sql()
-        vw_query = """CREATE OR REPLACE VIEW bgproute AS
-            SELECT d, rn, p FROM 
-            (SELECT d, igp.re, p, rn, c 
-            FROM abgp INNER JOIN igp
-            ON abgp.re = igp.re)
-            AS alt {0}
-            ORDER BY c ASC
-            LIMIT 1;""".format(policy)
+        hot_potato_query = """SELECT MIN(cost) from igp;"""
+        vw_query = """CREATE OR REPLACE VIEW route AS
+            SELECT prefix, ingress, aspath 
+            FROM abgp, igp
+            WHERE abgp.egress=igp.egress AND igp.cost = {0};"""
         try:
-            self.db.cursor.execute(vw_query)
-            print("Success: Route in view 'bgproute'")
+            self.db.cursor.execute(hot_potato_query)
+            min_cost = self.db.cursor.fetchall()[0][0]
+
+            self.db.cursor.execute(vw_query.format(min_cost))
+            print("Success: Route in view 'route'")
         except Exception, e:
             print "Failure: Unable to retrieve route", e
             return
 
     # MIRO(D,P) :- route(D,Rn,P)
-    def do_downstream(self, line):
+    def do_view(self, line):
         """
         Gets downstream ASes.
-        Usage: downstream
+        Usage: view
         """
-        vw_query = """CREATE VIEW downstream AS
-                 SELECT d, p FROM abgp GROUP BY d, p;"""
+        vw_query = """CREATE OR REPLACE VIEW miro AS
+                 SELECT prefix, aspath FROM abgp GROUP BY prefix, aspath;"""
         try:
             self.db.cursor.execute(vw_query)
-            print("Success: Downstream ASes in view 'downstream'")
+            print("Success: Downstream ASes in view 'miro'")
         except Exception, e:
-            print "Failure: Unable to retrieve downstream ASes", e
+            print "Failure: Unable to retrieve miro view", e
             return
 
     # :- MIRO(D, P)
@@ -79,10 +74,10 @@ class MiroConsole(AppConsole):
 
         #try to delete policy
         sel_query = """SELECT * FROM miro_policy WHERE 
-            d='{0}' AND p='{1}'""".format(args[0], ' '.join(args[1:]))
+            prefix='{0}' AND aspath='{1}'""".format(args[0], ' '.join(args[1:]))
 
         del_query = """DELETE FROM miro_policy WHERE 
-            d='{0}' AND p='{1}'""".format(args[0], ' '.join(args[1:]))
+            prefix='{0}' AND aspath='{1}'""".format(args[0], ' '.join(args[1:]))
         try:
             self.db.cursor.execute(sel_query);
             if len(self.db.cursor.fetchall()) == 0:
@@ -116,7 +111,7 @@ class MiroConsole(AppConsole):
         for policy in policies:
             conjunction = " " if first else " AND "
             first = False if first==True else False
-            policy_sql = "{0}{1}NOT (d='{2}' AND p='{3}')".format(policy_sql,
+            policy_sql = "{0}{1}NOT (d='{2}' AND p LIKE'%{3}%')".format(policy_sql,
                     conjunction, policy[0], policy[1])
             return policy_sql
 
