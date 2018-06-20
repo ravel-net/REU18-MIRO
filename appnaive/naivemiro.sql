@@ -31,7 +31,7 @@ ALTER TABLE abgp ADD CONSTRAINT policy1
   CHECK(prefix != '{0}' AND aspath != '{1}');""".format(newprefix, newaspath)
 
 # refresh route
-curr_path = "SELECT aspath FROM route;"
+curr_path = "SELECT * FROM route;"
 hot_potato = "SELECT MIN(cost) from igp, abgp WHERE igp.egress=abgp.egress;"
 route = """CREATE OR REPLACE VIEW route AS
     SELECT prefix, ingress, aspath 
@@ -43,14 +43,15 @@ route = """CREATE OR REPLACE VIEW route AS
 plpy.execute(delete_abgp)
 
 # if route is not affected by policy, then no need to update
-#aspath = plpy.execute(curr_path)
-#if aspath != newaspath:
-#  return None
+aspath = plpy.execute(curr_path)
+if len(aspath) != 0:
+  return None
 
 # else refresh route
 min_cost = plpy.execute(hot_potato)
-if len(min_cost) > 0:
-  plpy.execute(route.format(min_cost[0]['min']))
+min_cost = min_cost[0]['min']
+if min_cost is not None:
+  plpy.execute(route.format(min_cost))
 
 return None
 $$ LANGUAGE 'plpythonu' VOLATILE SECURITY DEFINER;
@@ -69,4 +70,4 @@ INSERT INTO igp VALUES('E', 'A', 15),('E', 'B', 13),('D', 'A', 8),
 ('D', 'B', 6),('C', 'A', 5),('C', 'B', 3);
 
 
-CREATE OR REPLACE VIEW naivemiro_violation AS (SELECT * FROM nodes);
+CREATE OR REPLACE VIEW naivemiro_violation AS (SELECT * FROM igp);

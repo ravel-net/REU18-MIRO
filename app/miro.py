@@ -10,7 +10,7 @@ class MiroConsole(AppConsole):
 
         policy = self.get_policy_sql()
         hot_potato_query = """SELECT MIN(cost) from igp;"""
-        vw_query = """CREATE OR REPLACE VIEW route AS
+        route_query = """CREATE OR REPLACE VIEW route AS
             SELECT prefix, ingress, aspath 
             FROM abgp, igp
             WHERE abgp.egress=igp.egress AND igp.cost = {0};"""
@@ -18,7 +18,7 @@ class MiroConsole(AppConsole):
             self.db.cursor.execute(hot_potato_query)
             min_cost = self.db.cursor.fetchall()[0][0]
 
-            self.db.cursor.execute(vw_query.format(min_cost))
+            self.db.cursor.execute(route_query.format(min_cost))
             print("Success: Route in view 'route'")
         except Exception, e:
             print "Failure: Unable to retrieve route", e
@@ -30,10 +30,10 @@ class MiroConsole(AppConsole):
         Gets downstream ASes.
         Usage: view
         """
-        vw_query = """CREATE OR REPLACE VIEW miro AS
+        miro_query = """CREATE OR REPLACE VIEW miro AS
                  SELECT prefix, aspath FROM abgp GROUP BY prefix, aspath;"""
         try:
-            self.db.cursor.execute(vw_query)
+            self.db.cursor.execute(miro_query)
             print("Success: Downstream ASes in view 'miro'")
         except Exception, e:
             print "Failure: Unable to retrieve miro view", e
