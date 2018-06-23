@@ -72,8 +72,7 @@ EXECUTE PROCEDURE miro_repair_fun();
 
 -- ==}{== TEST VALUES ==}{== --
 
-INSERT INTO bgp VALUES ('d','E','A','{1,3}',15),('d','D','A','{1,3}',8),('d','C','A','{1,3}',5),('d','E','A','{2,4}',15),('d','D','A','{2,4}',8),('d','C','A','{2,4}',5),('d','E','B','{2,4}',13),('d','D','B','{2,4}',6),('d','C','B','{2,4}',3);
-
+--INSERT INTO bgp VALUES ('d','E','A','{1,3}',15),('d','D','A','{1,3}',8),('d','C','A','{1,3}',5),('d','E','A','{2,4}',15),('d','D','A','{2,4}',8),('d','C','A','{2,4}',5),('d','E','B','{2,4}',13),('d','D','B','{2,4}',6),('d','C','B','{2,4}',3);
 
 -- ==}{== POPULATE INITIAL VIEWS ==}{== --
 
@@ -82,6 +81,6 @@ SELECT refresh_fun();
 
 -- ==}{== REMOVE ERROR MESSAGE ==}{== --
 
-DROP TABLE IF EXISTS remove_error_msg;
+DROP TABLE IF EXISTS remove_error_msg CASCADE;
 CREATE UNLOGGED TABLE remove_error_msg(violation int);
 CREATE OR REPLACE VIEW miro_violation AS (SELECT * from remove_error_msg);

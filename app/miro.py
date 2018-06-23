@@ -1,4 +1,5 @@
 import cmd
+from itertools import groupby
 from ravel.app import AppConsole
 
 class MiroConsole(AppConsole):
@@ -27,6 +28,26 @@ class MiroConsole(AppConsole):
       return
     
     return
+
+  def do_data(self, line):
+    i = 0
+    bgp_ins = "INSERT INTO BGP VALUES ('{0}','{1}','{2}','{3}','{4}')"
+    with open('apps/ribshort.txt') as fp:
+      for l in fp:
+        row_ls = l.split('|')
+        if not l.startswith('#') and not l.isspace() and row_ls[0] is 'R' and row_ls[1] is 'R':
+          prefix = row_ls[7]
+          ingress = row_ls[8]
+          egress = ingress
+          aspath = [k for k, g in groupby([int(x) for x in row_ls[9].split(' ')])]
+          aspath_str = str(aspath).replace('[', '{').replace(']','}')
+          try:
+            self.db.cursor.execute(bgp_ins.format(prefix, ingress, ingress, aspath_str, 0))
+          except Exception, e:
+            print "Failure: Unable to add to bgp table.", e
+    return
+    
+    
 
 shortcut = "miro"
 description = "Interdomain routing policy"
