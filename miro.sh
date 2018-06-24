@@ -1,24 +1,19 @@
-orch load miro sample
+# Run this script from bash:
+# $ sudo ./ravel.py --topo=single,2 --script=./miro.sh
 
-sample echo "SHOW DOWNSTREAM ASes"
-miro downstream
-p SELECT * FROM downstream;
+# Run this script from ravel's CLI:
+# exec ./miro.sh
 
-sample echo "SHOW VANILLA BGP ROUTE"
-miro route
-p SELECT * FROM bgproute;
+orch load miro
 
-sample echo "ADD POLICY, THEN RECALCULATE ROUTE"
-miro addpolicy d AS 2
-p SELECT * FROM miro_policy;
-miro route
-p SELECT * FROM bgproute;
-miro delpolicy d AS 2
-p SELECT * FROM miro_policy;
+# Show miro downstream view
+p SELECT * FROM miro;
 
-#sample echo "CASE WHERE MULTIPLE CHOICES IN ABGP"
-#p INSERT INTO abgp VALUES('d', 'B', 'AS 1')
-#miro route
-#p SELECT * FROM bgproute;
+# Show current route
+p SELECT * FROM route;
 
-miro help
+# Add policy
+miro addpolicy 1.0.4.0/24 174
+
+# Show updated route
+p SELECT * FROM route;

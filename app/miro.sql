@@ -2,21 +2,27 @@
 
 -- BGP table
 DROP TABLE IF EXISTS bgp CASCADE;
-CREATE UNLOGGED TABLE bgp (prefix varchar(16), ingress varchar(16), egress varchar(16), aspath int [], cost int);
+CREATE UNLOGGED TABLE bgp (prefix varchar(16), 
+    ingress varchar(16),
+    egress varchar(16), 
+    aspath int [], 
+    cost int);
+
+-- Miro downstream view
+CREATE OR REPLACE VIEW MIRO AS 
+    SELECT prefix, aspath 
+    FROM bgp
+    GROUP BY prefix, aspath;
 
 -- Miro policies
 DROP TABLE IF EXISTS miro_policy CASCADE;
 CREATE UNLOGGED TABLE miro_policy (prefix varchar(16), aspath int);
 
 
--- ==}{== VIEWS ==}{== --
+-- ==}{== BACKEND ==}{== --
 
 -- Refresh route
 CREATE OR REPLACE FUNCTION refresh_fun() RETURNS void AS $$
-miro = """CREATE OR REPLACE VIEW MIRO AS 
-    SELECT prefix, aspath 
-    FROM bgp {0}
-    GROUP BY prefix, aspath;"""
 hot_potato = "SELECT MIN(cost) from bgp {0};"
 route = """CREATE OR REPLACE VIEW route AS
     SELECT prefix, ingress, aspath
@@ -26,7 +32,6 @@ route = """CREATE OR REPLACE VIEW route AS
 # form residue
 policy_vw = "SELECT prefix, aspath FROM miro_policy"
 residue = ""
-residue_miro = ""
 residue_hotpotato = ""
 residue_route = ""
 policies = plpy.execute(policy_vw)
@@ -39,13 +44,9 @@ for p in policies:
   residue = "{0} NOT (prefix='{1}' AND {2}=ANY(aspath))".format(residue, p['prefix'], p['aspath'])
 
 if residue != "":
-  residue_miro = "WHERE {0}".format(residue)
   residue_hotpotato = "WHERE {0}".format(residue)
   residue_route = "AND {0}".format(residue)
 # end form residue
-
-#calculate miro view
-plpy.execute(miro.format(residue_miro))
 
 # calculate route
 min_cost = plpy.execute(hot_potato.format(residue_hotpotato))
@@ -54,8 +55,6 @@ if len(min_cost) > 0 and min_cost[0]['min'] != None:
   plpy.execute(route.format(min_cost, residue_route))
 $$ LANGUAGE 'plpythonu' VOLATILE SECURITY DEFINER;
 
-
--- ==}{== BACKEND ==}{== --
 
 -- Miro repair mechanism
 CREATE OR REPLACE FUNCTION miro_repair_fun() RETURNS TRIGGER AS $$
@@ -72,7 +71,16 @@ EXECUTE PROCEDURE miro_repair_fun();
 
 -- ==}{== TEST VALUES ==}{== --
 
---INSERT INTO bgp VALUES ('d','E','A','{1,3}',15),('d','D','A','{1,3}',8),('d','C','A','{1,3}',5),('d','E','A','{2,4}',15),('d','D','A','{2,4}',8),('d','C','A','{2,4}',5),('d','E','B','{2,4}',13),('d','D','B','{2,4}',6),('d','C','B','{2,4}',3);
+INSERT INTO bgp VALUES 
+('1.0.4.0/24','55.55.55.55','11.11.11.11','{43110,293,209,4637,1221,38803,56203}',15),
+('1.0.4.0/24','44.44.44.44','11.11.11.11','{43110,293,209,4637,1221,38803,56203}',8),
+('1.0.4.0/24','33.33.33.33','11.11.11.11','{43110,293,209,4637,1221,38803,56203}',5),
+('1.0.4.0/24','55.55.55.55','11.11.11.11','{43110,20912,174,4637,1221,38803,56203}',15),
+('1.0.4.0/24','44.44.44.44','11.11.11.11','{43110,20912,174,4637,1221,38803,56203}',8),
+('1.0.4.0/24','33.33.33.33','11.11.11.11','{43110,20912,174,4637,1221,38803,56203}',5),
+('1.0.4.0/24','55.55.55.55','22.22.22.22','{43110,20912,174,4637,1221,38803,56203}',13),
+('1.0.4.0/24','44.44.44.44','22.22.22.22','{43110,20912,174,4637,1221,38803,56203}',6),
+('1.0.4.0/24','33.33.33.33','22.22.22.22','{43110,20912,174,4637,1221,38803,56203}',3);
 
 -- ==}{== POPULATE INITIAL VIEWS ==}{== --
 
