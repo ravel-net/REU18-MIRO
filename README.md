@@ -41,7 +41,7 @@ prefix      aspath
 1.0.4.0/24  [43110, 293, 209, 4637, 1221, 38803, 56203]
 1.0.4.0/24  [43110, 20912, 174, 4637, 1221, 38803, 56203]
 ```
-Without any policies, we get the following path to the prefix 1.0.4.0/24:
+Without any policies, we get the path with the least cost to the prefix 1.0.4.0/24:
 ```
 ravel> miro route 1.0.4.0/24
 ravel> p SELECT * FROM route;
