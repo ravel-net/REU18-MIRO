@@ -2,9 +2,9 @@
 
 -- BGP table
 DROP TABLE IF EXISTS bgp CASCADE;
-CREATE UNLOGGED TABLE bgp (prefix varchar(16), 
-    ingress varchar(16),
-    egress varchar(16), 
+CREATE UNLOGGED TABLE bgp (prefix varchar(32), 
+    ingress varchar(32),
+    egress varchar(32), 
     aspath int [], 
     cost int);
 
@@ -16,7 +16,7 @@ CREATE OR REPLACE VIEW MIRO AS
 
 -- Miro policies
 DROP TABLE IF EXISTS miro_policy CASCADE;
-CREATE UNLOGGED TABLE miro_policy (prefix varchar(16), aspath int, UNIQUE(prefix, aspath));
+CREATE UNLOGGED TABLE miro_policy (prefix varchar(32), aspath int, UNIQUE(prefix, aspath));
 
 
 -- ==}{== BACKEND ==}{== --

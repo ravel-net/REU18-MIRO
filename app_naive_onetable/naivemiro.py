@@ -81,7 +81,7 @@ class MiroConsole(AppConsole):
 
     # Calculate the route
     try:
-      print(hot_potato.format(residue_hotpotato))
+      #print(hot_potato.format(residue_hotpotato))
       self.db.cursor.execute(hot_potato.format(residue_hotpotato))
       min_cost = self.db.cursor.fetchall()
       if min_cost != None and len(min_cost) == 1:
@@ -89,7 +89,7 @@ class MiroConsole(AppConsole):
       else:
         min_cost = 0
 
-      print(route.format(min_cost, residue_route))
+      #print(route.format(min_cost, residue_route))
       self.db.cursor.execute(route.format(min_cost, residue_route))
     except Exception, e:
       print(e)
@@ -118,14 +118,12 @@ class MiroConsole(AppConsole):
           prefix = row_ls[7]
           ingress = row_ls[8]
           egress = ingress
-          aspath = [k for k, g in groupby([int(x) for x in row_ls[9].split(' ')])]
-          aspath_str = str(aspath).replace('[', '{').replace(']','}')
+          aspath_str = str([k for k, g in groupby([int(x) for x in re.sub('[^\s0-9]','',row_ls[9]).split(' ')])]).replace('[', '{').replace(']','}')
 
           #Insert into bgp
-          bgp_ins = "INSERT INTO BGP VALUES ('{0}','{1}','{2}','{3}','{4}')"
-          bgp_ins = bgp_ins.format(prefix, ingress, ingress, aspath_str, 0)
+          bgpins = bgp_ins.format(prefix, ingress, ingress, aspath_str, 0)
           try:
-            self.db.cursor.execute(bgp_ins)
+            self.db.cursor.execute(bgpins)
           except Exception, e:
             print "Failure: Unable to add to bgp table.", e
     return

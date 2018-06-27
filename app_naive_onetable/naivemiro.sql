@@ -28,7 +28,6 @@ newaspath = str(TD["new"]["aspath"])
 
 delete_bgp = "DELETE FROM bgp WHERE prefix='{0}' AND {1}=ANY(aspath);"
 plpy.execute(delete_bgp.format(newprefix, newaspath))
-plpy.execute('SELECT route_refresh_fun()')
 
 return None
 $$ LANGUAGE 'plpythonu' VOLATILE SECURITY DEFINER;
