@@ -1,34 +1,22 @@
--- ==}{== TABLES ==}{== --
+---- ==}{== TABLES/VIEWS ==}{== --
 
 -- BGP table
 DROP TABLE IF EXISTS bgp CASCADE;
-CREATE UNLOGGED TABLE bgp (prefix varchar(16), ingress varchar(16), egress varchar(16), aspath int[], cost int);
+CREATE UNLOGGED TABLE bgp (prefix varchar(16), 
+    ingress varchar(16),
+    egress varchar(16),
+    aspath int [],
+    cost int);
+
+-- Miro downstream view
+CREATE OR REPLACE VIEW MIRO AS 
+    SELECT prefix, aspath 
+    FROM bgp
+    GROUP BY prefix, aspath;
 
 -- Miro policies
 DROP TABLE IF EXISTS miro_policy CASCADE;
-CREATE UNLOGGED TABLE miro_policy(prefix varchar(16), aspath int);
-
-
--- ==}{== VIEWS ==}{== --
-
--- Refresh route
-CREATE OR REPLACE FUNCTION route_refresh_fun() RETURNS void AS $$
-hot_potato = "SELECT MIN(cost) from bgp;"
-route = """CREATE OR REPLACE VIEW route AS
-    SELECT prefix, ingress, aspath 
-    FROM bgp
-    WHERE cost = {0};"""
-
-min_cost = plpy.execute(hot_potato)
-if len(min_cost) > 0 and min_cost[0]['min'] != None:
-  min_cost = min_cost[0]['min']
-  plpy.execute(route.format(min_cost))
-$$ LANGUAGE 'plpythonu' VOLATILE SECURITY DEFINER;
-
--- Refresh miro view
-CREATE OR REPLACE FUNCTION miro_refresh_fun() RETURNS void AS $$
-CREATE OR REPLACE VIEW miro AS SELECT prefix, aspath FROM bgp GROUP BY prefix, aspath;
-$$ LANGUAGE SQL;
+CREATE UNLOGGED TABLE miro_policy (prefix varchar(16), aspath int);
 
 
 -- ==}{== BACKEND ==}{== --
@@ -54,13 +42,54 @@ EXECUTE PROCEDURE miro_repair_fun();
 
 -- ==}{== TEST VALUES ==}{== --
 
-INSERT INTO bgp VALUES ('d','E','A','{1,3}',15),('d','D','A','{1,3}',8),('d','C','A','{1,3}',5),('d','E','A','{2,4}',15),('d','D','A','{2,4}',8),('d','C','A','{2,4}',5),('d','E','B','{2,4}',13),('d','D','B','{2,4}',6),('d','C','B','{2,4}',3);
+CREATE OR REPLACE FUNCTION load_data() RETURNS void AS $$
+from itertools import groupby
 
+bgp_ins = "INSERT INTO BGP VALUES ('{0}','{1}','{2}','{3}','{4}');"
+
+plpy.execute("TRUNCATE TABLE bgp;")
+
+with open('/home/ravel/ravel/apps/ribshort.txt') as fp:
+  for l in fp:
+    row_ls = l.split('|')
+    if not l.startswith('#') and not l.isspace() and row_ls[0] is 'R' and row_ls[1] is 'R':
+      prefix = row_ls[7]
+      ingress = row_ls[8]
+      egress = ingress
+      aspath = [k for k, g in groupby([int(x) for x in row_ls[9].split(' ')])]
+      aspath_str = str(aspath).replace('[', '{').replace(']','}')
+
+      bgp_ins_f = bgp_ins.format(prefix, ingress, ingress, aspath_str, 0)
+      
+      plpy.execute(bgp_ins_f)
+return
+
+$$ LANGUAGE 'plpythonu' VOLATILE SECURITY DEFINER;
 
 -- ==}{== POPULATE INITIAL VIEWS ==}{== --
 
-SELECT route_refresh_fun();
-SELECT miro_refresh_fun();
+SELECT load_data();
+
+---- Refresh route
+--CREATE OR REPLACE FUNCTION route_refresh_fun() RETURNS void AS $$
+--hot_potato = "SELECT MIN(cost) from bgp;"
+--route = """CREATE OR REPLACE VIEW route AS
+--    SELECT prefix, ingress, aspath 
+--    FROM bgp
+--    WHERE cost = {0};"""
+--
+--min_cost = plpy.execute(hot_potato)
+--if len(min_cost) > 0 and min_cost[0]['min'] != None:
+--  min_cost = min_cost[0]['min']
+--  plpy.execute(route.format(min_cost))
+--$$ LANGUAGE 'plpythonu' VOLATILE SECURITY DEFINER;
+--
+---- Refresh miro view
+--CREATE OR REPLACE FUNCTION miro_refresh_fun() RETURNS void AS $$
+--CREATE OR REPLACE VIEW miro AS SELECT prefix, aspath FROM bgp GROUP BY prefix, aspath;
+--$$ LANGUAGE SQL;
+--SELECT route_refresh_fun();
+--SELECT miro_refresh_fun();
 
 
 -- ==}{== REMOVE ERROR MESSAGE ==}{== --

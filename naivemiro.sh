@@ -1,10 +1,10 @@
 # Run this script from bash:
-# $ sudo ./ravel.py --topo=single,2 --script=./miro.sh
+# $ sudo ./ravel.py --topo=single,2 --script=./naivemiro.sh
 
 # Run this script from ravel's CLI:
-# exec ./miro.sh
+# exec ./naivemiro.sh
 
-orch load miro
+orch load naivemiro
 
 # Load demo data
 miro data
