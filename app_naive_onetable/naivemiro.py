@@ -1,5 +1,7 @@
 import cmd
 from itertools import groupby
+import re
+import os
 from ravel.app import AppConsole
 
 class MiroConsole(AppConsole):
@@ -111,7 +113,7 @@ class MiroConsole(AppConsole):
       return
 
     #parse rib file
-    with open(line.split(' ')[0]) as fp:
+    with open('/home/ravel/ravel/apps/' + line.split(' ')[0]) as fp:
       for l in fp:
         row_ls = l.split('|')
         if not l.startswith('#') and not l.isspace() and row_ls[0] is 'R' and row_ls[1] is 'R':
