@@ -16,6 +16,10 @@ sudo ./ravel.py --topo=single,3 --onlydb --script=miro.sh
 ```
 3. Repeat for naivemiro files
 
+# Commands
+```miro route [prefix]``` - queries route to prefix
+```miro addpolicy [prefix] [ASN]``` - adds policy to avoid paths with ASN to prefix
+
 # Demo
 First, load in the demo data. Miro data with no arguments loads the demo data.
 ```
