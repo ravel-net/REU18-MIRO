@@ -14,11 +14,17 @@ for filename in sys.argv[1:]:
     with open(filename,'r') as fp:
         for l in fp:
             l = l.strip()
+
+            # Direct connections and unique lines
             if l.startswith('D') and l not in lines_seen:
                 lines_seen.add(l)
+
+                # Deal with Multi-Oriign ASes
                 l_arr = l.replace(',','_').split('\t')
                 for eachfrom in l_arr[1].split('_'):
                     for eachto in l_arr[2].split('_'):
-                        ofp.write(eachfrom + ' ' + eachto + '\n')
+
+                        # Write to file
+                        ofp.write(eachfrom + ',' + eachto + '\n')
 
 ofp.close()
