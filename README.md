@@ -2,8 +2,10 @@
 # Notes
 
 Tables:
-* **bgp** (prefix varchar(32), ingress varchar(32), egress varchar(32), aspath int [], cost int)
-* **miro_policy** (prefix varchar(16), aspath int, UNIQUE(prefix, aspath))
+* **bgp** (prefix varchar(18), ingress int, egress int, aspath int [], cost int)
+* **miro_policy** (prefix varchar(18), aspath int, UNIQUE(prefix, aspath))
+
+\* Prefixes are varchar(18) because longest prefix possible is 255.255.255.255/36
 
 Views:
 * **miro:** SELECT bgp.prefix, bgp.aspath FROM bgp GROUP BY bgp.prefix, bgp.aspath;
