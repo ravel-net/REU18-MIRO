@@ -1,14 +1,16 @@
 # REU18-MIRO
-# Notes
+## Notes
 
-Tables:
-* **bgp** (prefix varchar(32), ingress varchar(32), egress varchar(32), aspath int [], cost int)
-* **miro_policy** (prefix varchar(16), aspath int, UNIQUE(prefix, aspath))
+### Tables:
+* **bgp** (prefix varchar(18), ingress int, egress int, aspath int [], cost int)
+* **miro_policy** (prefix varchar(18), aspath int, UNIQUE(prefix, aspath))
 
-Views:
+\* Prefixes are varchar(18) because longest prefix possible is 255.255.255.255/36
+
+### Views:
 * **miro:** SELECT bgp.prefix, bgp.aspath FROM bgp GROUP BY bgp.prefix, bgp.aspath;
 
-# Installation
+## Installation
 1. Copy miro.py and miro.sql from app folder of this repo into app folder in Ravel.
 2. Copy miro.sh into Ravel folder.
 ```
@@ -16,11 +18,11 @@ sudo ./ravel.py --topo=single,3 --onlydb --script=miro.sh
 ```
 3. Repeat for naivemiro files
 
-# Commands
+## Commands
 * ```miro route [prefix]``` - queries route to prefix
 * ```miro addpolicy [prefix] [ASN]``` - adds policy to avoid paths with ASN to prefix
 
-# Demo
+## Demo
 First, load in the demo data. Miro data with no arguments loads the demo data.
 ```
 ravel> miro data
