@@ -7,9 +7,11 @@ if len(sys.argv) < 2:
 
 # For determining unique edges
 lines_seen = set()
+as_seen = set()
 
 # Output file pointer
 ofp = open('cycles_combined.txt','w')
+ofp_as = open('cycles_combined_as.txt','w')
 for filename in sys.argv[1:]:
     with open(filename,'r') as fp:
         for l in fp:
@@ -26,5 +28,13 @@ for filename in sys.argv[1:]:
 
                         # Write to file
                         ofp.write(eachfrom + ',' + eachto + '\n')
+                        if int(eachfrom) not in as_seen:
+                            as_seen.add(int(eachfrom))
+                            ofp_as.write(eachfrom + '\n')
+                        if int(eachto) not in as_seen:
+                            as_seen.add(int(eachto))
+                            ofp_as.write(eachto + '\n')
 
 ofp.close()
+ofp_as.close()
+
