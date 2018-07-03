@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from itertools import groupby
 import re
+import sys
 
 class RibsParser:
     ribsfp = ''
@@ -8,9 +9,9 @@ class RibsParser:
     def __init__(self, ribsfp):
         self.ribsfp = ribsfp
 
-    def parse(self, outfp, n=100):
+    def parse(self, downstream=0, upstream=0, n=sys.maxsize, outfp='/dev/stdout'):
         i = 0
-        ofp = open(outfp,'w')
+        ofp = open(outfp, 'w')
         with open(self.ribsfp,'r') as fp:
             for l in fp:
                 feed = l.split('|')
@@ -36,11 +37,13 @@ class RibsParser:
                 aspath_str = aspath_str.replace('[', '{').replace(']','}')
 
                 ofp.write('{0}|{1}\n'.format(prefix, aspath_str))
-        ofp.close()
+
+        if ofp is not sys.stdout:
+            ofp.close()
 
 
 parser = RibsParser('ribshort.txt')
-parser.parse('ribs100.txt',100)
-parser.parse('ribs1000.txt',1000)
-parser.parse('ribs10000.txt',10000)
-
+#parser.parse()
+parser.parse(n=100,outfp='ribs100.txt')
+parser.parse(n=1000,outfp='ribs1000.txt')
+parser.parse(n=10000,outfp='ribs10000.txt')
