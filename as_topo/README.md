@@ -17,3 +17,5 @@ Older AS-link data from http://data.caida.org/datasets/topology/skitter-aslinks/
   * Second part of the file is the format description. In the parser, I only take direct links. If MOAS/AS set, I split into multiple rows
   * The rest of the file is the data
 
+
+./asadj2graph.pl -d -smun -l . -g skitter\_combined

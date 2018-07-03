@@ -28,18 +28,42 @@ class MiroLinks:
     
     def __init__(self, link_fps):
         # Parse each file
-        for link_fp in link_fps:
-            with open(link_fp,'r') as fp: 
-                self.parse_lines(fp)
+        # for link_fp in link_fps:
+        #   with open(link_fp,'r') as fp: 
+
+        with open(link_fps,'r') as fp: 
+            self.parse_lines(fp)
         print('Found {0} MIRO edges'.format(len(self.edges)))
         return
 
     def parse_lines(self, fp):
         for l in fp:
             l = l.strip()
+            l = l.replace('{','').replace('}','').replace(',','_')
+            
+            l_arr = l.split()
+
+            for eachfrom in l_arr[0].split('_'):
+                for eachto in l_arr[1].split('_'):
+                    #Add to node set
+                    if int(eachfrom) not in self.nodes:
+                        self.nodes.add(int(eachfrom))
+                    if int(eachto) not in self.nodes:
+                        self.nodes.add(int(eachto))
+                    
+                    #Add to edge set
+                    self.edges.add('{0},{1}'.format(eachfrom, eachto))
+                    self.edges.add('{0},{1}'.format(eachto, eachfrom))
+        return
+
+
+    """
+    def parse_lines(self, fp):
+        for l in fp:
+            l = l.strip()
 
             # Direct connections, non-null ASNs, unique lines
-            if (l.startswith('D') or l.startswith('I')) and '(null)' not in l and l not in self.lines_seen:
+            if l.startswith('D') and '(null)' not in l and l not in self.lines_seen:
                 self.lines_seen.add(l)
 
                 #Deal with MOAS
@@ -58,8 +82,9 @@ class MiroLinks:
                         
                         #Add to edge set
                         self.edges.add('{0},{1}'.format(eachfrom, eachto))
-                        self.edges.add('{0},{1}'.format(eachto, eachfrom))
+                        #self.edges.add('{0},{1}'.format(eachto, eachfrom))
         return
+    """
 
     #Write edges to file
     def write_edges(self, outfp):
@@ -110,7 +135,7 @@ if __name__ == "__main__":
         print('Not enough arguments')
         sys.exit(0)
 
-    mirolinks = MiroLinks(sys.argv[1:])
-    mirolinks.write_edges('miro_edges_030101.txt')
+    mirolinks = MiroLinks(sys.argv[1])
+    #mirolinks.write_edges('miro_edges_030101.txt')
     wiserlinks = WiserLinks('wiser_edges_03.txt')
     mirolinks.compare_links(wiserlinks, 'miro_wiser_diff.txt','miro_wiser_diff_nodes.txt')
